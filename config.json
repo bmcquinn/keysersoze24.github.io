@@ -1,18 +1,40 @@
 ﻿{
     "engine": {
         "name": "Soul Shell Engine",
-        "version": "1.0.0",
-        "environment": "production"
+        "version": "1.1.0+",
+        "calling_card": "+",
+        "licensing": "Dual-Licensed: Free Sovereign Human / Paid Commercial Plus"
+    },
+    "billing_tiers": {
+        "sovereign_human": {
+            "price": "$0.00",
+            "terms": "Free Forever",
+            "scope": "Personal, non-commercial use only"
+        },
+        "commercial_plus": {
+            "price": "Contact keysersoze24.dev",
+            "terms": "Subscription / Per-Seat Multi-Agent Node License",
+            "scope": "Enterprise stacks, commercial deployments, agency orchestration networks"
+        }
+    },
+    "modules": {
+        "agency_support": {
+            "enabled": true,
+            "tier": "sovereign_human",
+            "description": "Enables localized multi-agent mesh communication vectors."
+        },
+        "commercial_use_support": {
+            "enabled": false,
+            "tier": "commercial_plus",
+            "licensing_verification_url": "https://keysersoze24.dev/license/verify",
+            "description": "Toggles corporate network bypasses and commercial database connectivity."
+        }
     },
     "network": {
+        "tld_target": ".+",
         "domain": "keysersoze24.dev",
         "node_host": "keysersoze-node-1",
-        "inbound_ports": [22],
-        "outbound_ports": [443]
-    },
-    "repository": {
-        "provider": "GitHub",
-        "url": "https://github.com/bmcquinn/soul-shell.git",
-        "branch": "main"
+        "inbound_ports": [22, 443],
+        "outbound_ports": [443, 80]
     }
 }
