@@ -1,0 +1,18 @@
+﻿{
+    "engine": {
+        "name": "Soul Shell Engine",
+        "version": "1.0.0",
+        "environment": "production"
+    },
+    "network": {
+        "domain": "keysersoze24.dev",
+        "node_host": "keysersoze-node-1",
+        "inbound_ports": [22],
+        "outbound_ports": [443]
+    },
+    "repository": {
+        "provider": "GitHub",
+        "url": "https://github.com/bmcquinn/soul-shell.git",
+        "branch": "main"
+    }
+}
