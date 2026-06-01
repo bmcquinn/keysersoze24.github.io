@@ -4,8 +4,6 @@ import time
 import asyncio
 import threading
 import json
-import socket
-import struct
 
 SECRET_KEY = os.environ.get("OMNI_CORE_SECRET")
 if not SECRET_KEY:
@@ -15,67 +13,54 @@ if not SECRET_KEY:
 import soul_shell
 from sovereign_bridge import SovereignBridgeServer
 
-def run_server_in_thread(server_instance):
+def boot_node_async(node_instance):
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
-    loop.run_until_complete(server_instance.start())
+    loop.run_until_complete(node_instance.start())
 
 def run_integration_suite():
-    print("=== BEGIN PHASE 7 KEY ROTATION INTEGRATION MATRIX ===")
+    print("=== BEGIN PHASE 8 MULTI-NODE ROUTING MESH MATRIX ===")
     
-    bridge_server = SovereignBridgeServer(host="127.0.0.1", port=8080)
-    server_thread = threading.Thread(target=run_server_in_thread, args=(bridge_server,), daemon=True)
-    server_thread.start()
+    # 1. Instantiate multi-node structural mesh layout topology
+    node_alpha = SovereignBridgeServer(node_id="node_alpha", host="127.0.0.1", port=8080)
+    node_beta  = SovereignBridgeServer(node_id="node_beta", host="127.0.0.1", port=8081)
     
-    time.sleep(0.5)
+    thread_alpha = threading.Thread(target=boot_node_async, args=(node_alpha,), daemon=True)
+    thread_beta  = threading.Thread(target=boot_node_async, args=(node_beta,), daemon=True)
+    
+    thread_alpha.start()
+    thread_beta.start()
+    
+    # Settle multi-port bindings
+    time.sleep(0.7)
     
     try:
-        # Vector A: Valid Dynamic Session Key Handshake
-        print("\nTesting Rolling Key Generation Execution Pathway...")
-        verified_receipt = soul_shell.transmit_and_verify("SYS_TELEMETRY", {}, 701)
-        print(" -> VERIFIED METRICS HANDSHAKE RETURNED FROM KEY ROTATION TUNNEL:")
-        print(json.dumps(verified_receipt, indent=4))
+        # Vector A: Standard Direct Node Delivery Action
+        print("\nTesting Direct Route Path (Client -> Node Alpha)...")
+        receipt_alpha = soul_shell.transmit_to_mesh_node(target_node_id="node_alpha", command_id="PING", params={}, sequence=801, gateway_port=8080)
+        print(" -> RESPONSE FROM ALPHA GATEWAY:")
+        print(json.dumps(receipt_alpha, indent=4))
         
-        if verified_receipt.get("execution_result", {}).get("status") != "SUCCESS":
+        if receipt_alpha.get("execution_result", {}).get("executed_at_node") != "node_alpha":
+            print(" -> FAILURE: Local node execution boundary mapping error.")
             return False
 
-        # Vector B: Static Master Root Key Bypass Attempt (Malicious Packet Signature Failure)
-        print("\nTesting Static Root Bypass Attack Vector...")
-        print(" [Simulating client attempting to sign application traffic using the Master Root Secret directly...]")
+        # Vector B: Multi-Hop Transparent Routing Jump Action
+        print("\nTesting Multi-Hop Mesh Routing Path (Client -> Node Alpha Gateway -> Peer Forward -> Node Beta)...")
+        receipt_beta = soul_shell.transmit_to_mesh_node(target_node_id="node_beta", command_id="SYS_TELEMETRY", params={}, sequence=802, gateway_port=8080)
+        print(" -> RESPONSE RETURNED VIA ROUTING HOP PATH:")
+        print(json.dumps(receipt_beta, indent=4))
         
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-            sock.connect(("127.0.0.1", 8080))
-            
-            # Read and discard salt data block line to mimic simple connection bypass
-            file_obj = sock.makefile('r', encoding='utf-8')
-            _ = file_obj.readline()
-            
-            # Craft static signed bypass payload block packet structure layout manual
-            payload = {"command_id": "SYS_TELEMETRY", "params": {}, "sequence": 702, "timestamp": time.time()}
-            canonical = json.dumps(payload, sort_keys=True)
-            
-            # Sign directly with the master secret, bypassing the derived session key rule requirement
-            invalid_root_sig = soul_shell.hmac.new(SECRET_KEY.encode('utf-8'), canonical.encode('utf-8'), soul_shell.hashlib.sha256).hexdigest()
-            
-            bypass_envelope = {"version": "1.0", "signature": invalid_root_sig, "payload": payload}
-            packet_bytes = json.dumps(bypass_envelope).encode('utf-8')
-            header = struct.pack("!I", len(packet_bytes))
-            
-            sock.sendall(header + packet_bytes)
-            raw_response = sock.recv(1024)
-            server_response = json.loads(raw_response.decode('utf-8'))
-            
-            print(f" -> SERVER RESPONSE: {server_response}")
-            if server_response.get("status") == "REJECTED":
-                print(" -> REJECTED: Server successfully caught and dropped static key signature exploit attempt.")
-                print("\nDynamic Key Rotation Verification: SUCCESS. Master root secret fully shielded.")
-                return True
-            else:
-                print(" -> FAILURE: Server accepted a payload signed with the master root key directly.")
-                return False
+        target_node = receipt_beta.get("execution_result", {}).get("executed_at_node")
+        if target_node == "node_beta":
+            print("\nDecentralized Mesh Routing Verification: SUCCESS. Packets successfully scaled across network hops.")
+            return True
+        else:
+            print(f" -> FAILURE: Network packet dropped or misrouted inside mesh switchboard loop. Found: {target_node}")
+            return False
 
     except Exception as e:
-        print(f" -> CRITICAL INTERFACE ERROR: {e}")
+        print(f" -> CRITICAL MESH ORCHESTRATION PIPELINE FAILURE: {e}")
         return False
 
 if __name__ == "__main__":

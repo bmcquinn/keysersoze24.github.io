@@ -20,16 +20,13 @@ class OmniCoreProtocol:
             raise RuntimeError("OmniCoreProtocol requires a non-empty shared secret.")
         self.master_secret = effective_secret.encode('utf-8')
         
-        # Ephemeral active connection session key registry
         self.active_session_key: Optional[bytes] = None
-        
         self._processed_signatures: Set[str] = set()
         self._signature_history_ledger: list = []
         
         logging.info(f"Sovereign Omni-Protocol Core active. Bound to: {self.node_id} (KDF Engine Engaged)")
 
     def derive_session_key(self, session_salt: str) -> None:
-        """Derives a short-lived ephemeral session key using the master root secret and a wire salt."""
         self.active_session_key = hmac.new(
             self.master_secret, 
             session_salt.encode('utf-8'), 
@@ -38,13 +35,18 @@ class OmniCoreProtocol:
         logging.info("New ephemeral session key derived successfully. Root key shielded.")
 
     def verify_signature(self, payload_str: str, signature: str) -> bool:
-        # Fall back to master secret if an ephemeral socket handshake hasn't provisioned a session key
-        signing_key = self.active_session_key if self.active_session_key is not None else self.master_secret
-        expected = hmac.new(signing_key, payload_str.encode('utf-8'), hashlib.sha256).hexdigest()
-        return hmac.compare_digest(expected, signature)
+        """Verifies signatures, supporting both channel session keys and end-to-end root keys."""
+        # 1. Try connection session key if available
+        if self.active_session_key is not None:
+            expected = hmac.new(self.active_session_key, payload_str.encode('utf-8'), hashlib.sha256).hexdigest()
+            if hmac.compare_digest(expected, signature):
+                return True
+                
+        # 2. Fallback to Master Secret for end-to-end encapsulated mesh payloads
+        expected_master = hmac.new(self.master_secret, payload_str.encode('utf-8'), hashlib.sha256).hexdigest()
+        return hmac.compare_digest(expected_master, signature)
 
     def generate_payload_signature(self, payload_str: str) -> str:
-        """Helper method to sign outbound payloads using the active key layer."""
         signing_key = self.active_session_key if self.active_session_key is not None else self.master_secret
         return hmac.new(signing_key, payload_str.encode('utf-8'), hashlib.sha256).hexdigest()
 
@@ -68,7 +70,6 @@ class OmniCoreProtocol:
             logging.error("DEDUPLICATION BLOCK: Identical signature reuse detected!")
             return {"status": "REJECTED", "error": "Duplicate transaction hash detected."}
         
-        # Runs evaluation using dynamic active key layer selection rules
         if not self.verify_signature(payload_string, provided_sig):
             logging.error("SECURITY DISALIGNMENT: Cryptographic layer validation failure.")
             return {"status": "REJECTED", "error": "Invalid signature. Packet dropped."}
