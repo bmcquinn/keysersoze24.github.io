@@ -12,46 +12,38 @@ def run_server(server_instance):
     loop.run_until_complete(server_instance.start())
 
 def run_integration_suite():
-    print("=== BEGIN PHASE 11 IN-BAND RE-KEYING INTEGRATION MATRIX ===")
+    print("=== BEGIN PHASE 13 FEC FAULT-TOLERANCE INTEGRATION MATRIX ===")
     
-    server = SovereignBridgeServer(node_id="lifecycle_node_omega", host="127.0.0.1", port=8085)
+    server = SovereignBridgeServer(node_id="fec_healed_node_omega", host="127.0.0.1", port=8085)
     t = threading.Thread(target=run_server, args=(server,), daemon=True)
     t.start()
     
     time.sleep(0.5)
     
     try:
-        print("\nOpening Persistent Socket Session Channel Tunnel...")
         channel = soul_shell.SecureSessionChannel(host="127.0.0.1", port=8085)
         channel.connect_and_handshake()
         
-        # Packet iteration 1 (Nominal Key Utilization)
-        print("\nFiring Transaction Packet 1 [Nominal Status Expectation]...")
-        res_one = channel.transmit_command("AUTOMATION_TASK_A", {"index": 1})
-        print(f" -> RESPONSE 1: Lifecycle State = {res_one.get('lifecycle_state')}")
+        # Test Vector A: Nominal Transmission
+        print("\nSending Payload Over Clean Path Sequence...")
+        res_one = channel.transmit_command_with_noise("CLEAN_STREAM_VERIFY", inject_error=False)
+        print(f" -> RESPONSE 1: {res_one.get('status')}")
         
-        # Packet iteration 2 (Triggers Threshold Rule on the Core Boundary)
-        print("\nFiring Transaction Packet 2 [Key Rotation Threshold Hit]...")
-        res_two = channel.transmit_command("AUTOMATION_TASK_B", {"index": 2})
-        print(f" -> RESPONSE 2: Lifecycle State = {res_two.get('lifecycle_state')}")
-        if res_two.get("lifecycle_state") != "ROTATE_PENDING":
-            print(" -> FAILURE: Core failed to intercept and flag rotation thresholds.")
-            return False
-            
-        # Packet iteration 3 (Must validate perfectly under the newly negotiated Key_2 validation ring)
-        print("\nFiring Transaction Packet 3 [Validating Fresh Post-Rotation Key Ring Execution]...")
-        res_three = channel.transmit_command("AUTOMATION_TASK_C", {"index": 3})
-        print(f" -> RESPONSE 3: Lifecycle State = {res_three.get('lifecycle_state')}")
+        # Test Vector B: Damaged Wire Line Noise (Flipping bit boundaries mid-transit)
+        print("\nSending Payload Over Damaged Wire Line Noise Path Sequence...")
+        print(" [Simulating a single-bit flip on the socket buffer interface...]")
+        res_two = channel.transmit_command_with_noise("HEALED_STREAM_VERIFY", inject_error=True)
+        print(f" -> RESPONSE 2: {res_two.get('status')}")
         
         channel.close()
         
-        if res_three.get("status") == "SUCCESS":
-            print("\nIn-Band Symmetric Key Lifecycle Rotation: SUCCESS. Channel re-keyed seamlessly.")
+        if res_one.get("status") == "SUCCESS" and res_two.get("status") == "SUCCESS":
+            print("\nForward Error Correction Resiliency: SUCCESS. Line noise auto-healed locally.")
             return True
         return False
         
     except Exception as e:
-        print(f" -> LIFECYCLE RE-KEY TESTING FAILURE: {e}")
+        print(f" -> FEC INTEGRATION RUNNER DISALIGNMENT: {e}")
         return False
 
 if __name__ == "__main__":
