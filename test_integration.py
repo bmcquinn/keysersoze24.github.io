@@ -1,6 +1,8 @@
 ﻿import os
 import sys
 import time
+import asyncio
+import threading
 
 SECRET_KEY = os.environ.get("OMNI_CORE_SECRET")
 if not SECRET_KEY:
@@ -8,52 +10,67 @@ if not SECRET_KEY:
     sys.exit(1)
 
 import soul_shell
-import sovereign_bridge
+from sovereign_bridge import SovereignBridgeServer
+
+def run_server_in_thread(server_instance):
+    """Orchestrates asynchronous loop hosting inside a dedicated structural background thread."""
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    loop.run_until_complete(server_instance.start())
 
 def run_integration_suite():
-    print("=== BEGIN PHASE 3 GLOBAL HARDENING INTEGRATION MATRIX ===")
-    bridge = sovereign_bridge.SovereignBridge(bridge_id="bridge_nexus_7")
+    print("=== BEGIN PHASE 4 DISTRIBUTED SOCKET INTEGRATION MATRIX ===")
     
-    # Test A: Valid Real-Time Pipeline Execution
-    print("\nTesting Valid Path (Fresh Packet)...")
-    envelope = soul_shell.prepare_envelope("SYSTEM_DIAGNOSTIC", {"verbose": False}, 301)
-    try:
-        transport_receipt = bridge.ingest_and_route(envelope)
-        print(f" -> BRIDGE DELIVERED: {transport_receipt['transport_status']}")
-        execution_result = soul_shell.execute_envelope(envelope)
-        print(f" -> SHELL EXECUTED: {execution_result}")
-    except Exception as e:
-        print(f" -> FAILED: Fresh pipeline failed unexpected: {e}")
-        return False
-
-    # Test B: Tampered Data on Bridge Transit
-    print("\nTesting Tampered Path...")
-    tampered_envelope = envelope.copy()
-    tampered_payload = tampered_envelope["payload"].copy()
-    tampered_payload["sequence"] = 999
-    tampered_envelope["payload"] = tampered_payload
-    try:
-        bridge.ingest_and_route(tampered_envelope)
-        print(" -> FAILURE: Manipulated packet bypassed signature verification.")
-        return False
-    except sovereign_bridge.BridgeRoutingError:
-        print(" -> REJECTED: Bridge correctly caught signature mismatch.")
-
-    # Test C: Replay Attack Verification (Stale Packet Rejection)
-    print("\nTesting Replay Attack Path (Expired Packet)...")
-    # Simulate a packet captured 5 minutes ago (300 seconds)
-    stale_timestamp = time.time() - 300
-    stale_envelope = soul_shell.prepare_envelope("MALICIOUS_REPLAY", {"exploit": True}, 302, custom_timestamp=stale_timestamp)
+    # 1. Spin up the Socket Server Link in the background
+    bridge_server = SovereignBridgeServer(host="127.0.0.1", port=8080)
+    server_thread = threading.Thread(target=run_server_in_thread, args=(bridge_server,), daemon=True)
+    server_thread.start()
+    
+    # Allow socket bindings to settle
+    time.sleep(0.5)
     
     try:
-        bridge.ingest_and_route(stale_envelope)
-        print(" -> FAILURE: Network allowed a stale replayed packet to pass.")
-        return False
-    except sovereign_bridge.BridgeRoutingError as e:
-        print(f" -> REJECTED: Anti-replay protocol blocked packet. Reason: {e}")
+        # Vector A: Valid Live-Wire Handshake Execution
+        print("\nTesting Valid Path Over Socket Line...")
+        envelope = soul_shell.prepare_envelope("NET_SOCKET_INIT", {"encrypted": True}, 401)
+        receipt = soul_shell.transmit_over_wire(envelope)
+        print(f" -> SERVER RESPONSE: {receipt}")
+        if receipt.get("status") != "DELIVERED":
+            print(" -> FAILURE: Server dropped standard connection path.")
+            return False
+
+        # Vector B: Tampered Data Verification Over Socket
+        print("\nTesting Tampered Data Payload Over Socket Line...")
+        tampered_envelope = envelope.copy()
+        tampered_payload = tampered_envelope["payload"].copy()
+        tampered_payload["sequence"] = 99999 # Alter data mid-transit
+        tampered_envelope["payload"] = tampered_payload
         
-    print("\nProtocol Behavior Tests: SUCCESS. Replay protection actively shielding network.")
-    return True
+        receipt = soul_shell.transmit_over_wire(tampered_envelope)
+        print(f" -> SERVER RESPONSE: {receipt}")
+        if receipt.get("status") == "DELIVERED":
+            print(" -> FAILURE: Server allowed tampered network data payload to route.")
+            return False
+        print(" -> REJECTED: Server caught transit injection attempt.")
+
+        # Vector C: Expired Packet Attack Over Socket
+        print("\nTesting Replay Protection Over Socket Line...")
+        stale_timestamp = time.time() - 120 # 2 minutes old
+        stale_envelope = soul_shell.prepare_envelope("REPLAY_ATTACK", {"exploit": True}, 402, custom_timestamp=stale_timestamp)
+        
+        receipt = soul_shell.transmit_over_wire(stale_envelope)
+        print(f" -> SERVER RESPONSE: {receipt}")
+        if receipt.get("status") == "DELIVERED":
+            print(" -> FAILURE: Server accepted expired network transport frame.")
+            return False
+        print(" -> REJECTED: Anti-replay protocol systematically dropped expired packet.")
+
+        print("\nDistributed Network Protocol Verification: SUCCESS. Live-wire transport secured.")
+        return True
+
+    except Exception as e:
+        print(f" -> CRITICAL INTERFACE COUPLING FAIL: {e}")
+        return False
 
 if __name__ == "__main__":
     success = run_integration_suite()
