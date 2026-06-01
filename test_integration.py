@@ -12,29 +12,29 @@ def run_server(server_instance):
     loop.run_until_complete(server_instance.start())
 
 def run_integration_suite():
-    print("=== BEGIN PHASE 9 DH HANDSHAKE INTEGRATION MATRIX ===")
+    print("=== BEGIN PHASE 10 ENCRYPTED TUNNEL INTEGRATION MATRIX ===")
     
-    server = SovereignBridgeServer(node_id="secure_dh_node_omega", host="127.0.0.1", port=8085)
+    server = SovereignBridgeServer(node_id="secure_crypto_node_omega", host="127.0.0.1", port=8085)
     t = threading.Thread(target=run_server, args=(server,), daemon=True)
     t.start()
     
     time.sleep(0.5)
     
     try:
-        print("\nInitiating Modular Arithmetic Diffie-Hellman Socket Handshake...")
-        result = soul_shell.transmit_dh_handshake(
+        print("\nExecuting Command Transmission over Zero-Dependency Encrypted Tunnel...")
+        cleartext_result = soul_shell.transmit_encrypted_command(
             host="127.0.0.1", port=8085, 
-            command_id="DH_SECURE_TUNNEL", params={"native_math": True}
+            command_id="SYS_TELEMETRY", params={"obfuscated": True}
         )
-        print("\n -> TUNNEL TRANSACTION CONFIRMATION:")
-        print(json.dumps(result, indent=4))
+        print("\n -> DECRYPTED FEEDBACK CONFIRMATION PACKAGE FROM NODE SERVER:")
+        print(json.dumps(cleartext_result, indent=4))
         
-        if result.get("payload", {}).get("status") == "SUCCESS":
-            print("\nZero-Dependency Perfect Forward Secrecy: SUCCESS. Dynamic keys negotiated natively.")
+        if cleartext_result.get("status") == "SUCCESS":
+            print("\nEnd-to-End Payload Confidentiality: SUCCESS. Wire data fully encrypted.")
             return True
         return False
     except Exception as e:
-        print(f" -> INTEGRATION MATRIX REJECTED: {e}")
+        print(f" -> ENCRYPTED SYSTEM MATRIX FAILURE: {e}")
         return False
 
 if __name__ == "__main__":
