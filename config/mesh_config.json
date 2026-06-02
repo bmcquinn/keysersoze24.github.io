@@ -3,10 +3,9 @@
         "node_alpha": 9090,
         "node_beta": 9091,
         "node_gamma": 9092,
-        "node_delta_simulated": 9095
+        "node_delta": 9093
     },
     "GLOBAL_SETTINGS": {
-        "fixed_payload_size": 512,
-        "heartbeat_interval_seconds": 2
+        "fixed_payload_size": 512
     }
 }
