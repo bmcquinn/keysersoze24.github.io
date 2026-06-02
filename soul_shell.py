@@ -5,6 +5,7 @@ import struct
 import time
 import hmac
 import hashlib
+from obfuscation_matrix import TrafficObfuscator
 
 CONFIG_PATH = "mesh_config.json"
 
@@ -13,6 +14,7 @@ class SecureSessionChannel:
         self.sock = None
         self.session_key = hashlib.sha256(b"SovereignMeshDefaultSecretTokenKeyRing").digest()
         self.active_gateway = None
+        self.obfuscator = TrafficObfuscator()
 
     @staticmethod
     def encode_fec_bytes(data: bytes) -> bytes:
@@ -54,7 +56,6 @@ class SecureSessionChannel:
         return bytes(out)
 
     def connect_and_handshake_resilient(self) -> None:
-        """Reads configuration maps to build path lines to active nodes."""
         try:
             with open(CONFIG_PATH, "r") as f:
                 config = json.load(f)
@@ -62,7 +63,6 @@ class SecureSessionChannel:
         except Exception:
             routes = {"node_alpha": 9090}
 
-        # Dynamically evaluate the topology based on your configuration priorities
         for node_id in ["node_alpha", "node_gamma"]:
             if node_id in routes:
                 try:
@@ -103,7 +103,13 @@ class SecureSessionChannel:
         routing_envelope = {"target_node": target_node, "inner_envelope": inner_envelope}
         
         client_json_bytes = json.dumps(routing_envelope).encode('utf-8')
-        fec_bytes = self.encode_fec_bytes(client_json_bytes)
+        
+        # CHOOSE OBFUSCATION VECTOR: Dynamically rotate exfiltration cover structures
+        chosen_medium = ["HTTPS_SIM", "DNS_TXT", "UDP_BLAST"][int(time.time()) % 3]
+        obfuscated_package = self.obfuscator.camouflage_fragment(client_json_bytes, chosen_medium)
+        print(f"[*] Camouflage Applied: Encapsulated over structural vector medium [{chosen_medium}]")
+        
+        fec_bytes = self.encode_fec_bytes(json.dumps(obfuscated_package).encode('utf-8'))
             
         header = struct.pack("!I", len(fec_bytes))
         self.sock.sendall(header + bytes(fec_bytes))
