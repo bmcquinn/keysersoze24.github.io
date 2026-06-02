@@ -32,16 +32,15 @@ def boot_node_gamma():
 if __name__ == "__main__":
     print("[*] Launching High-Availability Multi-Node Sovereign Mesh Topologies...")
     
-    # SIMULATION VECTOR: node_alpha remains commented out to simulate a hard hardware crash
-    # t1 = threading.Thread(target=boot_node_alpha, daemon=True)
+    t1 = threading.Thread(target=boot_node_alpha, daemon=True)
     t2 = threading.Thread(target=boot_node_beta, daemon=True)
     t3 = threading.Thread(target=boot_node_gamma, daemon=True)
     
-    # t1.start()
+    t1.start()
     t2.start()
     t3.start()
     
-    print("[-] Primary Edge Gateway [node_alpha] is OFFLINE (Simulated Crash).")
+    print("[+] Primary Edge Gateway [node_alpha] deployed on port 9090.")
     print("[+] Hidden Target Mesh Node [node_beta] deployed on port 9091.")
     print("[+] Backup Hot-Standby Gateway [node_gamma] deployed on port 9092.")
     print("[*] Systems armed. Press Ctrl+C to stop container blocks.\n")
