@@ -12,30 +12,25 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - [SOVEREIGN-BRIDGE]
 
 NODE_ROUTING_TABLE = {
     "node_alpha": 9090,
-    "node_beta": 9091
+    "node_beta": 9091,
+    "node_gamma": 9092  # Expanded High-Availability Router Node Target
 }
 
 AUDIT_LOG_PATH = "mesh_audit.bin"
 
 def write_binary_audit_entry(node_id: str, event_type: str, status_code: int):
-    """Packs and appends a fixed 72-byte cryptographic hash-chained entry to the log file."""
     timestamp = time.time()
     node_bytes = node_id.encode('utf-8')[:12].ljust(12, b'\x00')
     event_bytes = event_type.encode('utf-8')[:12].ljust(12, b'\x00')
     
-    # Calculate the historic hash block connection pointer
     last_hash = b"\x00" * 36
     if os.path.exists(AUDIT_LOG_PATH) and os.path.getsize(AUDIT_LOG_PATH) >= 72:
         with open(AUDIT_LOG_PATH, "rb") as f:
             f.seek(-72, os.SEEK_END)
             last_entry = f.read(72)
-            # Hash the entire previous block to establish the tamper-proof chain link
             last_hash = hashlib.sha256(last_entry).hexdigest()[:36].encode('utf-8')
             
-    # Pack parameters explicitly into 72-byte strict memory boundaries
-    # Format: d (double, 8B) + 12s (12B) + 12s (12B) + I (uint32, 4B) + 36s (36B) = 72 Bytes
     packed_entry = struct.pack("!d12s12sI36s", timestamp, node_bytes, event_bytes, status_code, last_hash)
-    
     with open(AUDIT_LOG_PATH, "ab") as f:
         f.write(packed_entry)
 

@@ -7,12 +7,9 @@ def launch_panel():
     print("====================================================")
     print("      SOVEREIGN MESH OPERATOR ADMINISTRATIVE PANEL   ")
     print("====================================================")
-    print(" Secure Channel Status: BURST MODE (DH / CTR / FEC) ")
-    print(" Available Network Nodes: node_alpha, node_beta     ")
+    print(" Secure Channel Status: BURST MODE (HA FAILOVER)    ")
+    print(" Active Topology Pool: node_alpha, node_gamma       ")
     print(" Commands: PING, SYS_TELEMETRY, HELP, EXIT          \n")
-
-    gateway_host = "127.0.0.1"
-    gateway_port = 9090
 
     while True:
         try:
@@ -38,11 +35,10 @@ def launch_panel():
 
             command_id = parts[1].upper()
             
-            print(f"[*] Initializing connection sequence via edge gateway on port {gateway_port}...")
-            channel = SecureSessionChannel(host=gateway_host, port=gateway_port)
-            channel.connect_and_handshake(target_node=target_node)
+            channel = SecureSessionChannel()
+            channel.connect_and_handshake_resilient()
             
-            print(f"[*] Dispatching {command_id} targeting [{target_node}] via multi-hop mesh forwarding...")
+            print(f"[*] Dispatching {command_id} targeting [{target_node}] via gateway line [{channel.active_gateway}]...")
             response = channel.transmit_command_routed(target_node=target_node, command_id=command_id)
             
             print(f"[+] Response received from [{target_node}]:")
