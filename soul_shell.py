@@ -6,13 +6,7 @@ import time
 import hmac
 import hashlib
 
-FIXED_PAYLOAD_SIZE = 512
-
-# Resilient Infrastructure Pool Map
-GATEWAY_POOL = [
-    {"node_id": "node_alpha", "host": "127.0.0.1", "port": 9090},
-    {"node_id": "node_gamma", "host": "127.0.0.1", "port": 9092}  # Hot-Standby Backup Path
-]
+CONFIG_PATH = "mesh_config.json"
 
 class SecureSessionChannel:
     def __init__(self):
@@ -60,26 +54,42 @@ class SecureSessionChannel:
         return bytes(out)
 
     def connect_and_handshake_resilient(self) -> None:
-        """Iterates through the gateway infrastructure pool to bypass down or unresponsive nodes."""
-        for gateway in GATEWAY_POOL:
-            try:
-                self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                self.sock.settimeout(2.0)
-                self.sock.connect((gateway["host"], gateway["port"]))
-                self.active_gateway = gateway["node_id"]
-                return
-            except (socket.error, socket.timeout):
-                continue
-        raise RuntimeError("CRITICAL BLACKOUT: All primary and backup mesh gateway tracks are offline.")
+        """Reads configuration maps to build path lines to active nodes."""
+        try:
+            with open(CONFIG_PATH, "r") as f:
+                config = json.load(f)
+            routes = config.get("NODE_ROUTING_TABLE", {})
+        except Exception:
+            routes = {"node_alpha": 9090}
+
+        # Dynamically evaluate the topology based on your configuration priorities
+        for node_id in ["node_alpha", "node_gamma"]:
+            if node_id in routes:
+                try:
+                    self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                    self.sock.settimeout(2.0)
+                    self.sock.connect(("127.0.0.1", routes[node_id]))
+                    self.active_gateway = node_id
+                    return
+                except Exception:
+                    continue
+        raise RuntimeError("CRITICAL BLACKOUT: All accessible gateway lines are offline.")
 
     def transmit_command_routed(self, target_node: str, command_id: str) -> dict:
+        try:
+            with open(CONFIG_PATH, "r") as f:
+                config = json.load(f)
+            payload_size = config.get("GLOBAL_SETTINGS", {}).get("fixed_payload_size", 512)
+        except Exception:
+            payload_size = 512
+
         payload = {"command_id": command_id, "params": {}, "timestamp": time.time()}
         raw_payload_bytes = json.dumps(payload, sort_keys=True).encode('utf-8')
         
         padded_buffer = bytearray()
         padded_buffer.extend(len(raw_payload_bytes).to_bytes(4, byteorder='big'))
         padded_buffer.extend(raw_payload_bytes)
-        padding_needed = FIXED_PAYLOAD_SIZE - len(padded_buffer)
+        padding_needed = payload_size - len(padded_buffer)
         if padding_needed > 0: padded_buffer.extend(os.urandom(padding_needed))
             
         iv = os.urandom(16)
@@ -90,11 +100,7 @@ class SecureSessionChannel:
         signature = hmac.new(self.session_key, canonical_target.encode('utf-8'), hashlib.sha256).hexdigest()
         
         inner_envelope = {"version": "1.0", "signature": signature, "encrypted_data": encrypted_data_block}
-        
-        routing_envelope = {
-            "target_node": target_node,
-            "inner_envelope": inner_envelope
-        }
+        routing_envelope = {"target_node": target_node, "inner_envelope": inner_envelope}
         
         client_json_bytes = json.dumps(routing_envelope).encode('utf-8')
         fec_bytes = self.encode_fec_bytes(client_json_bytes)

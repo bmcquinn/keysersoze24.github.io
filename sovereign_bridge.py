@@ -6,17 +6,55 @@ import time
 import hmac
 import hashlib
 import os
-from omni_core import OmniCoreProtocol
+import threading
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - [SOVEREIGN-BRIDGE] - %(levelname)s - %(message)s')
 
-NODE_ROUTING_TABLE = {
-    "node_alpha": 9090,
-    "node_beta": 9091,
-    "node_gamma": 9092  # Expanded High-Availability Router Node Target
-}
-
+CONFIG_PATH = "mesh_config.json"
 AUDIT_LOG_PATH = "mesh_audit.bin"
+
+NODE_ROUTING_TABLE = {}
+GLOBAL_SETTINGS = {"fixed_payload_size": 512}
+
+def load_mesh_configuration():
+    """Reads the JSON footprint from disk with empty-file validation protections."""
+    global NODE_ROUTING_TABLE, GLOBAL_SETTINGS
+    if not os.path.exists(CONFIG_PATH):
+        return
+    try:
+        # ATOMIC VALIDATION VECTOR: Ensure the file size is greater than zero before attempting a parse loop
+        if os.path.getsize(CONFIG_PATH) == 0:
+            return
+
+        with open(CONFIG_PATH, "r") as f:
+            config = json.load(f)
+        NODE_ROUTING_TABLE.clear()
+        NODE_ROUTING_TABLE.update(config.get("NODE_ROUTING_TABLE", {}))
+        GLOBAL_SETTINGS.update(config.get("GLOBAL_SETTINGS", {}))
+        logging.info(f"[*] Configuration hot-swapped in memory. Routes: {list(NODE_ROUTING_TABLE.keys())}")
+    except json.JSONDecodeError:
+        # Suppress race-condition read blips silently while file-system writes complete
+        pass
+    except Exception as e:
+        logging.error(f"[-] Configuration hot-reload extraction failure: {e}")
+
+def watch_config_lifecycle():
+    last_mtime = 0
+    while True:
+        try:
+            if os.path.exists(CONFIG_PATH):
+                current_mtime = os.path.getmtime(CONFIG_PATH)
+                if current_mtime != last_mtime:
+                    # Brief structural pause to let the external OS process flush text to disk cleanly
+                    time.sleep(0.1)
+                    load_mesh_configuration()
+                    last_mtime = current_mtime
+        except Exception:
+            pass
+        time.sleep(0.5)
+
+load_mesh_configuration()
+threading.Thread(target=watch_config_lifecycle, daemon=True).start()
 
 def write_binary_audit_entry(node_id: str, event_type: str, status_code: int):
     timestamp = time.time()
@@ -33,6 +71,8 @@ def write_binary_audit_entry(node_id: str, event_type: str, status_code: int):
     packed_entry = struct.pack("!d12s12sI36s", timestamp, node_bytes, event_bytes, status_code, last_hash)
     with open(AUDIT_LOG_PATH, "ab") as f:
         f.write(packed_entry)
+
+from omni_core import OmniCoreProtocol
 
 class SovereignBridgeServer:
     def __init__(self, node_id: str, host: str = "127.0.0.1", port: int = 8085):
