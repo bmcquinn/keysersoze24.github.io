@@ -1,8 +1,8 @@
-﻿import sys
+import sys
 import time
 import json
 from soul_shell import SecureSessionChannel
-from mesh_tunnel import MeshTunnelInterface
+from core.mesh_tunnel import MeshTunnelInterface
 
 def launch_panel():
     print("====================================================")

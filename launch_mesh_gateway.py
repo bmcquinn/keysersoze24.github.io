@@ -1,4 +1,4 @@
-﻿import asyncio
+import asyncio
 import os
 import sys
 import threading
@@ -9,7 +9,7 @@ sys.path.append(os.getcwd())
 if not os.environ.get("OMNI_CORE_SECRET"):
     os.environ["OMNI_CORE_SECRET"] = "DefaultTemporaryMasterKeyRingToken101"
 
-from sovereign_bridge import SovereignBridgeServer
+from server.sovereign_bridge import SovereignBridgeServer
 
 def boot_node_alpha():
     loop = asyncio.new_event_loop()
