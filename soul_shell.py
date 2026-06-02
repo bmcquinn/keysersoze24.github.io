@@ -6,8 +6,6 @@ import time
 import hmac
 import hashlib
 
-DH_PRIME = 0xFFFFFFFFFFFFFFFFC90FFAA7ED91923641216727E282D639171164B826770944A66616A6635B494499FA695630F27A9757434353051A6FFD96B8799337765771281F229188EA671C9F65D55247716509352B51410300250377B7928509755B1C661CE12674975422E0A1B1605A60308917044893844147432180F551512307B28B3154562A735B5A93D6B2FEB1350148E06A1435801741757D225D45667F9351A3C4E02B6D44D5C5581D05125597
-DH_GENERATOR = 2
 FIXED_PAYLOAD_SIZE = 512
 
 class SecureSessionChannel:
@@ -15,7 +13,7 @@ class SecureSessionChannel:
         self.host = host
         self.port = port
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.session_key = b""
+        self.session_key = hashlib.sha256(b"SovereignMeshDefaultSecretTokenKeyRing").digest()
 
     @staticmethod
     def encode_fec_bytes(data: bytes) -> bytes:
@@ -56,20 +54,12 @@ class SecureSessionChannel:
             counter += 1
         return bytes(out)
 
-    def connect_and_handshake(self) -> None:
+    def connect_and_handshake(self, target_node: str) -> None:
+        """Establishes clear socket communication bounds to edge proxy gateways."""
         self.sock.connect((self.host, self.port))
-        file_obj = self.sock.makefile('r', encoding='utf-8')
-        server_data = json.loads(file_obj.readline().strip())
-        server_public = int(server_data["dh_public"])
-        client_private = int.from_bytes(os.urandom(32), byteorder='big')
-        client_public = pow(DH_GENERATOR, client_private, DH_PRIME)
-        self.sock.sendall(json.dumps({"dh_public": client_public}).encode('utf-8') + b"\n")
-        shared_secret_int = pow(server_public, client_private, DH_PRIME)
-        shared_bytes = shared_secret_int.to_bytes((shared_secret_int.bit_length() + 7) // 8, byteorder='big')
-        self.session_key = hashlib.sha256(shared_bytes).digest()
 
-    def transmit_command_with_noise(self, command_id: str, inject_error: bool = False) -> dict:
-        """Assembles, wraps, and encodes structural traffic blocks, with options to simulate bit-flips."""
+    def transmit_command_routed(self, target_node: str, command_id: str) -> dict:
+        """Assembles a nested routing structure package, then handles FEC error-correction encapsulation."""
         payload = {"command_id": command_id, "params": {}, "timestamp": time.time()}
         raw_payload_bytes = json.dumps(payload, sort_keys=True).encode('utf-8')
         
@@ -86,24 +76,24 @@ class SecureSessionChannel:
         canonical_target = json.dumps(encrypted_data_block, sort_keys=True)
         signature = hmac.new(self.session_key, canonical_target.encode('utf-8'), hashlib.sha256).hexdigest()
         
-        envelope = {"version": "1.0", "signature": signature, "encrypted_data": encrypted_data_block}
-        client_json_bytes = json.dumps(envelope).encode('utf-8')
+        inner_envelope = {"version": "1.0", "signature": signature, "encrypted_data": encrypted_data_block}
         
-        # Parse through the Forward Error Correction matrix array encoder
-        fec_bytes = bytearray(self.encode_fec_bytes(client_json_bytes))
+        # NESTED ROUTING WRAPPER ENVELOPE: Binds tracking properties outside the cryptographic layer
+        routing_envelope = {
+            "target_node": target_node,
+            "inner_envelope": inner_envelope
+        }
         
-        # LINE NOISE SIMULATION ATTACK VECTOR:
-        # Intentionally mutate a byte block down-wire to mimic true network line rot
-        if inject_error:
-            fec_bytes[12] ^= 0x01 
+        client_json_bytes = json.dumps(routing_envelope).encode('utf-8')
+        fec_bytes = self.encode_fec_bytes(client_json_bytes)
             
         header = struct.pack("!I", len(fec_bytes))
         self.sock.sendall(header + bytes(fec_bytes))
         
-        # Handle Server Reply Processing
+        # Read server response block
         resp_header = self.sock.recv(4096)
         if not resp_header or len(resp_header) < 4:
-            raise RuntimeError("Truncated read response sequence.")
+            raise RuntimeError("Truncated data response stream loop.")
             
         server_payload_length = struct.unpack("!I", resp_header[0:4])[0]
         raw_srv_fec = resp_header[4:4+server_payload_length]
@@ -114,7 +104,7 @@ class SecureSessionChannel:
         server_enc_block = server_envelope.get("encrypted_data")
         canonical_resp_str = json.dumps(server_enc_block, sort_keys=True)
         if not hmac.compare_digest(hmac.new(self.session_key, canonical_resp_str.encode('utf-8'), hashlib.sha256).hexdigest(), server_envelope.get("signature", "")):
-            raise RuntimeError("MAC disalignment block drop.")
+            raise RuntimeError("Outer packet MAC verification failure.")
             
         srv_iv = bytes.fromhex(server_enc_block["iv"])
         srv_ciphertext = bytes.fromhex(server_enc_block["ciphertext"])

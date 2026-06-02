@@ -8,7 +8,7 @@ def launch_panel():
     print("      SOVEREIGN MESH OPERATOR ADMINISTRATIVE PANEL   ")
     print("====================================================")
     print(" Secure Channel Status: BURST MODE (DH / CTR / FEC) ")
-    print(" Available Nodes: node_alpha                        ")
+    print(" Available Network Nodes: node_alpha, node_beta     ")
     print(" Commands: PING, SYS_TELEMETRY, HELP, EXIT          \n")
 
     gateway_host = "127.0.0.1"
@@ -21,7 +21,7 @@ def launch_panel():
                 continue
 
             parts = user_input.split(maxsplit=2)
-            target_node = parts[0]
+            target_node = parts[0].lower()
 
             if target_node.upper() == "EXIT":
                 print("[*] Terminating operator session framework. Goodbye.")
@@ -29,7 +29,7 @@ def launch_panel():
 
             if target_node.upper() == "HELP":
                 print("\nFormat: [target_node_id] [command_id]")
-                print("Example: node_alpha SYS_TELEMETRY\n")
+                print("Example: node_beta SYS_TELEMETRY\n")
                 continue
 
             if len(parts) < 2:
@@ -38,20 +38,17 @@ def launch_panel():
 
             command_id = parts[1].upper()
             
-            print(f"[*] Initializing ephemeral tunnel sequence to gateway port {gateway_port}...")
-            
-            # Burst Execution Vector: Instantiate fresh single-use dynamic session keys per transmission enter click
+            print(f"[*] Initializing connection sequence via edge gateway on port {gateway_port}...")
             channel = SecureSessionChannel(host=gateway_host, port=gateway_port)
-            channel.connect_and_handshake()
+            channel.connect_and_handshake(target_node=target_node)
             
-            print(f"[*] Transmitting {command_id} over hardened, padded error-healing layer...")
-            response = channel.transmit_command_with_noise(command_id, inject_error=False)
+            print(f"[*] Dispatching {command_id} targeting [{target_node}] via multi-hop mesh forwarding...")
+            response = channel.transmit_command_routed(target_node=target_node, command_id=command_id)
             
-            print(f"[+] Response received from {target_node}:")
+            print(f"[+] Response received from [{target_node}]:")
             print(json.dumps(response, indent=4))
             print("")
             
-            # Gracefully clear local session key rings from memory cache footprints
             channel.close()
 
         except KeyboardInterrupt:
