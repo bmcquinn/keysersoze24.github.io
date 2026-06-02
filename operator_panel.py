@@ -2,14 +2,18 @@
 import time
 import json
 from soul_shell import SecureSessionChannel
+from mesh_tunnel import MeshTunnelInterface
 
 def launch_panel():
     print("====================================================")
     print("      SOVEREIGN MESH OPERATOR ADMINISTRATIVE PANEL   ")
     print("====================================================")
-    print(" Secure Channel Status: BURST MODE (HA FAILOVER)    ")
+    print(" Secure Channel Status: BURST MODE (TUNNEL ACTIVE)  ")
     print(" Active Topology Pool: node_alpha, node_gamma       ")
-    print(" Commands: PING, SYS_TELEMETRY, HELP, EXIT          \n")
+    print(" Commands: PING, SYS_TELEMETRY, ROUTE_TUNNEL, EXIT  \n")
+
+    # Initialize Virtual Layer 3 Interface Config Parameters Locally
+    v_tun = MeshTunnelInterface(interface_name="sov_tun0", virtual_ip="10.0.14.1")
 
     while True:
         try:
@@ -24,11 +28,6 @@ def launch_panel():
                 print("[*] Terminating operator session framework. Goodbye.")
                 break
 
-            if target_node.upper() == "HELP":
-                print("\nFormat: [target_node_id] [command_id]")
-                print("Example: node_beta SYS_TELEMETRY\n")
-                continue
-
             if len(parts) < 2:
                 print("[-] Invalid syntax. Usage: [target_node_id] [command_id]")
                 continue
@@ -38,8 +37,16 @@ def launch_panel():
             channel = SecureSessionChannel()
             channel.connect_and_handshake_resilient()
             
-            print(f"[*] Dispatching {command_id} targeting [{target_node}] via gateway line [{channel.active_gateway}]...")
-            response = channel.transmit_command_routed(target_node=target_node, command_id=command_id)
+            if command_id == "ROUTE_TUNNEL":
+                print("[*] Intercepting raw application packet traffic stream...")
+                simulated_payload = b"GET /index.html HTTP/1.1\r\nHost: mesh.internal\r\n\r\n"
+                # Package raw simulated data through the virtual interface core
+                raw_frame = v_tun.encapsulate_ip_packet(destination_ip="10.0.14.2", payload_bytes=simulated_payload)
+                
+                print(f"[*] Dispatching {len(raw_frame)} bytes of encapsulated tunnel traffic through [{channel.active_gateway}]...")
+                response = channel.transmit_command_routed(target_node=target_node, command_id=f"TUNNEL_DATA:{raw_frame.hex()}")
+            else:
+                response = channel.transmit_command_routed(target_node=target_node, command_id=command_id)
             
             print(f"[+] Response received from [{target_node}]:")
             print(json.dumps(response, indent=4))
