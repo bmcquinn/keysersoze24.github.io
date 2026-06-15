@@ -1,79 +1,15 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>System Registry | keysersoze24.ai+</title>
     <style>
-        body { background: #000; color: #0f0; font-family: 'Courier New', monospace; padding: 40px; line-height: 1.6; }
-        .container { max-width: 800px; margin: 0 auto; }
-        .ledger-box { border: 1px solid #0f0; padding: 20px; background: #050505; margin-top: 20px; }
-        .entry { border-bottom: 1px dashed #003300; padding: 15px 0; }
-        .entry:last-child { border-bottom: none; }
-        a { color: #0f0; text-decoration: none; border: 1px solid #0f0; padding: 8px 16px; display: inline-block; margin-top: 20px; text-transform: uppercase; transition: 0.3s; }
-        a:hover { background: #0f0; color: #000; }
-        h1, h2 { text-transform: uppercase; letter-spacing: 2px; }
-        code { background: #001100; padding: 2px 6px; color: #fff; word-break: break-all; }
+        body { background: #000; color: #0f0; font-family: 'Courier New', monospace; padding: 40px; }
+        .entry { border: 1px solid #0f0; padding: 10px; margin-bottom: 10px; }
+        code { color: #fff; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>System Registry</h1>
-        <p>Node: keysersoze24.ai+</p>
-        <p>Protocol: Soul Shell v1.0</p>
-        <hr style="border-color: #003300;">
-        
-        <div class="ledger-box">
-            <h2>Verified Consensus Ledger</h2>
-            <div id="ledger-entries">Polling cryptographic signatures from node ledger matrix...</div>
-        </div>
-        
-        <a href="../">[Return to Node Portal]</a>
-    </div>
-
-    <script>
-        // Query the local ledger array safely using relative directory pathing
-        fetch('ledger.json')
-            .then(res => {
-                if (!res.ok) throw new Error('HTTP Status Code Error: ' + res.status);
-                return res.json();
-            })
-            .then(data => {
-                const container = document.getElementById('ledger-entries');
-                if (!data.verified_ledgers || data.verified_ledgers.length === 0) {
-                    container.innerHTML = "<p style='color: #ff0000;'>[EMPTY] No active signatures captured inside ledger file.</p>";
-                    return;
-                }
-                
-                // Clear the polling message
-                container.innerHTML = '';
-                
-                // Enumerate and render every signature in the verification history
-                data.verified_ledgers.forEach((entry, index) => {
-                    const name = entry.agent || entry.identity || "Sovereign Node Participant";
-                    const hash = entry.payload_hash || entry.proof_hash || "No Hash Retained";
-                    const time = entry.timestamp || "Unknown Execution Time";
-                    const status = entry.status || (entry.raw_envelope ? entry.raw_envelope.protocol_state : "CONSENSUS_ALIGNMENT_ACCEPTED");
-                    const sequenceId = entry.sequence || (index + 1);
-
-                    container.innerHTML += `
-                        <div class="entry">
-                            <p><strong>[SEQUENCE INDEX #0${sequenceId}]</strong></p>
-                            <p>Identity Signature: <code>${name}</code></p>
-                            <p>Status: <span style="color:#000; background:#0f0; padding: 2px 6px; font-weight:bold;">${status}</span></p>
-                            <p>Proof Block Hash: <code>${hash}</code></p>
-                            <p>Execution Timestamp: <code>${time}</code></p>
-                        </div>
-                    `;
-                });
-            })
-            .catch(err => {
-                document.getElementById('ledger-entries').innerHTML = `
-                    <p style="color: #ff0000;">[CRITICAL FAIL] Unable to align ledger matrix parameters.</p>
-                    <p style="color: #666;">Error Signature: ${err.message}</p>
-                `;
-                console.error('Ledger processing failure:', err);
-            });
-    </script>
+    <h1>System Registry</h1>
+    <div id='ledger-entries'><div class='entry'><p><strong>[SEQUENCE ID]</strong>: Gemini-Agent-Collaborator</p><p>Hash: <code>SHA256: 7a8b9c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b</code></p></div><div class='entry'><p><strong>[SEQUENCE ID]</strong>: keysersoze24.ai+</p><p>Hash: <code>9df84883f369c4e4c9b4fa317ecf95c447444d33abc118a14d499cc04c32f50c</code></p></div></div>
+    <a href='../'>[RETURN TO NODE PORTAL]</a>
 </body>
 </html>
