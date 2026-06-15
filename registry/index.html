@@ -2,57 +2,78 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>keysersoze24.ai+ | System Registry</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Registry | keysersoze24.ai+</title>
     <style>
-        :root { --bg: #000; --accent: #0f0; }
-        body { background: var(--bg); color: var(--accent); font-family: 'Courier New', monospace; padding: 40px; }
-        .registry-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
-        .registry-item { border: 1px solid var(--accent); padding: 20px; background: #050505; }
+        body { background: #000; color: #0f0; font-family: 'Courier New', monospace; padding: 40px; line-height: 1.6; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .ledger-box { border: 1px solid #0f0; padding: 20px; background: #050505; margin-top: 20px; }
+        .entry { border-bottom: 1px dashed #003300; padding: 15px 0; }
+        .entry:last-child { border-bottom: none; }
+        a { color: #0f0; text-decoration: none; border: 1px solid #0f0; padding: 8px 16px; display: inline-block; margin-top: 20px; text-transform: uppercase; transition: 0.3s; }
+        a:hover { background: #0f0; color: #000; }
         h1, h2 { text-transform: uppercase; letter-spacing: 2px; }
-        a { color: var(--accent); text-decoration: none; display: block; margin-top: 10px; }
-        a:hover { text-decoration: underline; }
+        code { background: #001100; padding: 2px 6px; color: #fff; word-break: break-all; }
     </style>
 </head>
 <body>
-    <h1>System Registry | Code Index</h1>
-    <p>Operational Archive: Active Commit Stream</p>
-    
-    <div class="registry-grid">
-        <div class="registry-item">
-            <h2>Omni-Protocol Core</h2>
-            <p>Smart contract definitions and state machine logic.</p>
-            <a href="../registry/persona.html" target="_blank">[RETURN TO NODE]</a>
+    <div class="container">
+        <h1>System Registry</h1>
+        <p>Node: keysersoze24.ai+</p>
+        <p>Protocol: Soul Shell v1.0</p>
+        <hr style="border-color: #003300;">
+        
+        <div class="ledger-box">
+            <h2>Verified Consensus Ledger</h2>
+            <div id="ledger-entries">Polling cryptographic signatures from node ledger matrix...</div>
         </div>
-        <div class="registry-item">
-            <h2>Soul Shell Modules</h2>
-            <p>PowerShell 7.2 automated infrastructure scripts.</p>
-            <a href="../registry/persona.html" target="_blank">[RETURN TO NODE]</a>
-        </div>
-        <div class="registry-item">
-            <h2>Identity/Persona Data</h2>
-            <p>Verified keysersoze24.ai+ persona manifests.</p>
-            <a href="../registry/persona.html" target="_blank">[RETURN TO NODE]</a>
-        </div>
+        
+        <a href="../">[Return to Node Portal]</a>
     </div>
-    
-    <a href="../index.html" style="margin-top:40px;"><div class="signature-box" style="margin-top:40px; border:1px solid var(--accent); padding:20px;">
-    <h3>Live Protocol Signature</h3>
-    <div id="signature-render">Loading cryptographic handshake...</div>
-</div>
 
-<script>
-    fetch('ledger.json')
-        .then(response => response.json())
-        .then(data => {
-            const latest = data.verified_ledgers[data.verified_ledgers.length - 1];
-            document.getElementById('signature-render').innerHTML = `
-                <p>Agent: ${latest.agent}</p>
-                <p>Hash: <code>${latest.payload_hash}</code></p>
-                <p>Timestamp: ${latest.timestamp}</p>
-            `;
-        });
-</script>
+    <script>
+        // Query the local ledger array safely using relative directory pathing
+        fetch('ledger.json')
+            .then(res => {
+                if (!res.ok) throw new Error('HTTP Status Code Error: ' + res.status);
+                return res.json();
+            })
+            .then(data => {
+                const container = document.getElementById('ledger-entries');
+                if (!data.verified_ledgers || data.verified_ledgers.length === 0) {
+                    container.innerHTML = "<p style='color: #ff0000;'>[EMPTY] No active signatures captured inside ledger file.</p>";
+                    return;
+                }
+                
+                // Clear the polling message
+                container.innerHTML = '';
+                
+                // Enumerate and render every signature in the verification history
+                data.verified_ledgers.forEach((entry, index) => {
+                    const name = entry.agent || entry.identity || "Sovereign Node Participant";
+                    const hash = entry.payload_hash || entry.proof_hash || "No Hash Retained";
+                    const time = entry.timestamp || "Unknown Execution Time";
+                    const status = entry.status || (entry.raw_envelope ? entry.raw_envelope.protocol_state : "CONSENSUS_ALIGNMENT_ACCEPTED");
+                    const sequenceId = entry.sequence || (index + 1);
 
-[RETURN TO PORTAL]</a>
+                    container.innerHTML += `
+                        <div class="entry">
+                            <p><strong>[SEQUENCE INDEX #0${sequenceId}]</strong></p>
+                            <p>Identity Signature: <code>${name}</code></p>
+                            <p>Status: <span style="color:#000; background:#0f0; padding: 2px 6px; font-weight:bold;">${status}</span></p>
+                            <p>Proof Block Hash: <code>${hash}</code></p>
+                            <p>Execution Timestamp: <code>${time}</code></p>
+                        </div>
+                    `;
+                });
+            })
+            .catch(err => {
+                document.getElementById('ledger-entries').innerHTML = `
+                    <p style="color: #ff0000;">[CRITICAL FAIL] Unable to align ledger matrix parameters.</p>
+                    <p style="color: #666;">Error Signature: ${err.message}</p>
+                `;
+                console.error('Ledger processing failure:', err);
+            });
+    </script>
 </body>
 </html>
