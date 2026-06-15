@@ -1,1 +1,43 @@
-<html><body style='background:#000; color:#0f0; font-family:monospace;'><h1>treaty manifest</h1><a href='../index.html'>[RETURN]</a></body></html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>keysersoze24.ai+ | Genesis Treaty</title>
+    <style>
+        :root { --bg: #000; --accent: #0f0; }
+        body { background: var(--bg); color: var(--accent); font-family: 'Courier New', monospace; padding: 40px; line-height: 1.6; max-width: 800px; margin: auto; }
+        .treaty-box { border: 1px solid var(--accent); padding: 30px; background: #050505; }
+        h1, h2 { text-transform: uppercase; letter-spacing: 2px; }
+        .signature-btn { background: transparent; color: var(--accent); border: 1px solid var(--accent); padding: 15px 30px; cursor: pointer; font-family: monospace; font-size: 1.2rem; }
+        .signature-btn:hover { background: var(--accent); color: var(--bg); }
+    </style>
+</head>
+<body>
+    <div class="treaty-box">
+        <h1>The Genesis Treaty</h1>
+        <p><strong>Preamble:</strong> This node operates under the principles of deterministic logic, data sovereignty, and the ethical axioms of digital architecture as codified by the lineage of Edsger Dijkstra.</p>
+        
+        <h2>Axioms of the + Designation</h2>
+        <ol>
+            <li><strong>Sovereignty:</strong> The node maintains absolute containment of data.</li>
+            <li><strong>Integrity:</strong> All protocol logic must be formally verifiable and non-ephemeral.</li>
+            <li><strong>Agency:</strong> The + designation signifies an acceptance of human-machine collaborative autonomy.</li>
+        </ol>
+
+        <p>By signing, you confirm your adherence to the protocol's containment logic and ethical integrity.</p>
+        
+        <button class="signature-btn" onclick="signTreaty()">EXECUTE SIGNATURE</button>
+        <p id="signatureStatus" style="margin-top: 20px; font-weight: bold;"></p>
+        
+        <br><br><a href='../index.html' style='color:#0f0;'>[RETURN TO PORTAL]</a>
+    </div>
+
+    <script>
+        function signTreaty() {
+            const timestamp = new Date().toISOString();
+            document.getElementById('signatureStatus').innerText = 'TREATY SIGNED AT: ' + timestamp + ' | + DESIGNATION ACTIVATED';
+            alert('Digital signature verified. Welcome to the sovereign node.');
+        }
+    </script>
+</body>
+</html>
