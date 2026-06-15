@@ -35,6 +35,24 @@
         </div>
     </div>
     
-    <a href="../index.html" style="margin-top:40px;">[RETURN TO PORTAL]</a>
+    <a href="../index.html" style="margin-top:40px;"><div class="signature-box" style="margin-top:40px; border:1px solid var(--accent); padding:20px;">
+    <h3>Live Protocol Signature</h3>
+    <div id="signature-render">Loading cryptographic handshake...</div>
+</div>
+
+<script>
+    fetch('ledger.json')
+        .then(response => response.json())
+        .then(data => {
+            const latest = data.verified_ledgers[data.verified_ledgers.length - 1];
+            document.getElementById('signature-render').innerHTML = `
+                <p>Agent: ${latest.agent}</p>
+                <p>Hash: <code>${latest.payload_hash}</code></p>
+                <p>Timestamp: ${latest.timestamp}</p>
+            `;
+        });
+</script>
+
+[RETURN TO PORTAL]</a>
 </body>
 </html>
