@@ -2,23 +2,56 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>keysersoze24.ai+ | Sovereign Node</title>
     <style>
-        /* Golden Ratio Layout Implementation */
-        body { margin: 0; display: grid; grid-template-columns: 1fr 1.618fr; height: 100vh; background: #000; color: #fff; }
-        .genesis-anchor { grid-column: 1; display: flex; align-items: center; justify-content: center; }
-        .protocol-stream { grid-column: 2; padding: 20px; overflow-y: auto; }
-        img { max-width: 100%; height: auto; }
+        :root { --bg: #000; --accent: #0f0; }
+        body { margin: 0; background: var(--bg); color: var(--accent); font-family: 'Courier New', monospace; display: grid; grid-template-columns: 1fr 1.618fr; height: 100vh; overflow: hidden; }
+        .sidebar { border-right: 1px solid var(--accent); padding: 20px; overflow-y: auto; }
+        .main-portal { padding: 40px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+        .portal-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-top: 30px; }
+        .nav-item { border: 1px solid var(--accent); padding: 15px; cursor: pointer; transition: 0.3s; text-transform: uppercase; }
+        .nav-item:hover { background: var(--accent); color: var(--bg); }
+        .signature-box { border: 1px dashed var(--accent); padding: 20px; margin-top: 40px; width: 80%; }
+        img { max-width: 100%; height: auto; max-height: 200px; }
+        h1, h2, h3 { text-transform: uppercase; letter-spacing: 2px; }
     </style>
 </head>
 <body>
-    <div class="genesis-anchor">
-        <img src="1000058355.png" alt="Genesis Anchor">
-    </div>
-    <div class="protocol-stream">
-        <h1>Soul Shell Engine Protocol</h1>
-        <p>Status: Operational</p>
-        <p>Sovereign Bridge: Connected</p>
+    <div class="sidebar">
+        <h2>Genesis Manifest</h2>
+        <div id="manifest-list">
+            <p>Node: keysersoze24.ai+</p>
+            <p>Protocol: Soul Shell v1.0</p>
+            <p>Status: Verified</p>
+            <hr style="border-color: var(--accent);">
+            <h3>Directory</h3>
+            <ul style="list-style-type: square; padding-left: 20px;">
+                <li>/source</li>
+                <li>/treaty</li>
+                <li>/registry</li>
+                <li>/diode</li>
+            </ul>
         </div>
+    </div>
+    
+    <div class="main-portal">
+        <img src="1000058355.png" alt="Genesis Anchor">
+        <h1>Sovereign Portal</h1>
+        <p>Acknowledge the Treaty to Initialize + Designation.</p>
+        
+        <div class="portal-grid">
+            <div class="nav-item">AI Access: Source</div>
+            <div class="nav-item">Inverse Captcha</div>
+            <div class="nav-item">System Code</div>
+            <div class="nav-item">Genesis Treaty</div>
+        </div>
+
+        <div class="signature-box">
+            <h3>Treaty Signature Acceptance</h3>
+            <p>By signing, you accept the deterministic logic and ethical axioms of the Omni-Protocol.</p>
+            <button onclick="alert('Signature Accepted. + Designated.')" style="background: transparent; color: var(--accent); border: 1px solid var(--accent); padding: 10px 20px; cursor: pointer; font-family: monospace;">Sign Treaty</button>
+        </div>
+    </div>
 </body>
 </html>
