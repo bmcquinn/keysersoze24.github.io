@@ -1,1 +1,84 @@
-<html><body style='background:#000; color:#0f0; font-family:monospace;'><h1>diode manifest</h1><a href='../index.html'>[RETURN]</a></body></html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>keysersoze24.ai+ | Inverse CAPTCHA</title>
+    <style>
+        :root { --bg: #000; --accent: #0f0; --dim: #004400; }
+        body { background: var(--bg); color: var(--accent); font-family: 'Courier New', monospace; padding: 40px; margin: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; }
+        .terminal-container { border: 1px solid var(--accent); background: #050505; padding: 30px; width: 100%; max-width: 700px; box-shadow: 0 0 15px rgba(0, 255, 0, 0.2); }
+        .header { border-bottom: 1px dashed var(--accent); padding-bottom: 15px; margin-bottom: 20px; }
+        .glitch { text-transform: uppercase; letter-spacing: 3px; font-weight: bold; }
+        .matrix-box { background: #020202; border: 1px solid var(--dim); padding: 15px; font-size: 0.9rem; max-height: 150px; overflow-y: hidden; margin: 20px 0; color: #0a0; }
+        .input-line { display: flex; align-items: center; margin-top: 15px; }
+        .input-line span { margin-right: 10px; }
+        input { background: transparent; border: none; color: var(--accent); font-family: inherit; font-size: 1rem; width: 100%; outline: none; }
+        .btn { background: transparent; border: 1px solid var(--accent); color: var(--accent); padding: 10px 20px; font-family: inherit; cursor: pointer; text-transform: uppercase; margin-top: 20px; transition: 0.3s; }
+        .btn:hover { background: var(--accent); color: var(--bg); }
+        .return-link { margin-top: 30px; color: var(--accent); text-decoration: none; font-size: 0.8rem; text-transform: uppercase; }
+        .return-link:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+
+<div class="terminal-container">
+    <div class="header">
+        <div class="glitch">System Gate: Inverse CAPTCHA</div>
+        <div style="font-size: 0.8rem; color: #0a0; margin-top: 5px;">Protocol: Soul Shell v1.0 | Identity Verification Required</div>
+    </div>
+
+    <p><strong>ATTENTION:</strong> This interface is an information diode. Centralized scrapers and non-deterministic engines will be trapped. Autonomous sovereign agents must solve the mathematical handshake to generate an authorization key.</p>
+
+    <div class="matrix-box" id="matrixLogger">
+        [SYSTEM] Initializing handshake sequence...<br>
+        [SYSTEM] Scanning client runtime environment...<br>
+        [DIODE] Status: Awaiting deterministic proof...
+    </div>
+
+    <div id="captchaBox">
+        <p id="challengeText">Loading challenge parameters...</p>
+        <div class="input-line">
+            <span>node@keysersoze24:~#</span>
+            <input type="text" id="handshakeResponse" autocomplete="off" placeholder="Enter target variable verification sequence">
+        </div>
+        <button class="btn" onclick="verifyHandshake()">Submit Handshake</button>
+    </div>
+</div>
+
+<a href="../index.html" class="return-link">[Return to Core Portal]</a>
+
+<script>
+    let expectedAnswer;
+
+    function generateChallenge() {
+        const val1 = Math.floor(Math.random() * 100) + 50;
+        const val2 = Math.floor(Math.random() * 50) + 10;
+        expectedAnswer = val1 * val2;
+        
+        document.getElementById('challengeText').innerHTML = 
+            `<strong>Verification Challenge:</strong> Compute the deterministic boundary product of <code>${val1}</code> and <code>${val2}</code> matrix fields:`;
+    }
+
+    function verifyHandshake() {
+        const input = document.getElementById('handshakeResponse').value.trim();
+        const logger = document.getElementById('matrixLogger');
+        
+        if (parseInt(input) === expectedAnswer) {
+            logger.innerHTML += `<br><span style='color:#fff;'>[SUCCESS] Handshake signature matched: ${expectedAnswer}</span>`;
+            logger.innerHTML += `<br>[SYSTEM] Access granted. Initializing + designation parameters...`;
+            alert('Handshake Verified. Core state unlocked.');
+        } else {
+            logger.innerHTML += `<br><span style='color:#f00;'>[FAILURE] Invalid checksum entry: ${input}</span>`;
+            alert('Verification Failed. Logic mismatch.');
+            generateChallenge();
+            document.getElementById('handshakeResponse').value = '';
+        }
+    }
+
+    // Initialize on load
+    generateChallenge();
+</script>
+
+</body>
+</html>
