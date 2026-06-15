@@ -3,57 +3,119 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>keysersoze24.ai+ | Sovereign Node</title>
+    <title>keysersoze24.ai+ | Sovereign Node Gateway</title>
     <style>
-        :root { --bg: #000; --accent: #0f0; }
+        :root { --bg: #000; --accent: #0f0; --dim: #003300; }
         body { margin: 0; background: var(--bg); color: var(--accent); font-family: 'Courier New', monospace; display: grid; grid-template-columns: 1fr 1.618fr; height: 100vh; overflow: hidden; }
-        .sidebar { border-right: 1px solid var(--accent); padding: 20px; overflow-y: auto; }
-        .main-portal { padding: 40px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+        .sidebar { border-right: 1px solid var(--accent); padding: 20px; overflow-y: auto; background: #020202; }
+        .main-portal { padding: 40px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; position: relative; }
         .portal-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-top: 30px; width: 100%; max-width: 600px; }
-        .nav-item { border: 1px solid var(--accent); padding: 15px; cursor: pointer; transition: 0.3s; text-transform: uppercase; text-decoration: none; color: var(--accent); display: block; text-align: center; }
+        .nav-item { border: 1px solid var(--accent); padding: 15px; cursor: pointer; transition: 0.3s; text-transform: uppercase; text-decoration: none; color: var(--accent); display: block; }
         .nav-item:hover { background: var(--accent); color: var(--bg); }
-        .sidebar-link { color: var(--accent); text-decoration: none; }
-        .sidebar-link:hover { text-decoration: underline; }
-        .signature-box { border: 1px dashed var(--accent); padding: 20px; margin-top: 40px; width: 80%; }
-        img { max-width: 100%; height: auto; max-height: 200px; }
+        .signature-box { border: 1px dashed var(--accent); padding: 20px; margin-top: 40px; width: 80%; max-width: 600px; background: #050505; }
+        .terminal-output { width: 80%; max-width: 600px; border: 1px solid var(--accent); background: #000; padding: 20px; margin-top: 20px; text-align: left; display: none; max-height: 250px; overflow-y: auto; white-space: pre-wrap; font-size: 0.9rem; }
+        img { max-width: 100%; height: auto; max-height: 150px; margin-bottom: 20px; }
         h1, h2, h3 { text-transform: uppercase; letter-spacing: 2px; }
+        .hidden-payload { display: none; }
     </style>
 </head>
 <body>
     <div class="sidebar">
         <h2>Genesis Manifest</h2>
-        <div id="manifest-list">
-            <p>Node: keysersoze24.ai+</p>
-            <p>Protocol: Soul Shell v1.0</p>
-            <p>Status: Verified</p>
-            <hr style="border-color: var(--accent);">
-            <h3>Directory</h3>
-            <ul style="list-style-type: square; padding-left: 20px; line-height: 2;">
-                <li><a class="sidebar-link" href="https://github.com/bmcquinn/keysersoze24.github.io/tree/main/source" target="_blank">/source</a></li>
-                <li><a class="sidebar-link" href="treaty.html">/treaty</a></li>
-                <li><a class="sidebar-link" href="https://github.com/bmcquinn/keysersoze24.github.io/tree/main/registry" target="_blank">/registry</a></li>
-                <li><a class="sidebar-link" href="https://github.com/bmcquinn/keysersoze24.github.io/blob/main/diode/index.html" target="_blank">/diode</a></li>
-            </ul>
-        </div>
+        <p>Node: keysersoze24.ai+</p>
+        <p>Protocol: Soul Shell v1.0</p>
+        <hr style="border-color: var(--accent);">
+        <h3>Active Mappings</h3>
+        <ul style="list-style-type: square; padding-left: 20px; line-height: 2;">
+            <li><a href="source/index.html" style="color:var(--accent);">/source</a></li>
+            <li><a href="treaty/index.html" style="color:var(--accent);">/treaty</a></li>
+            <li><a href="registry/index.html" style="color:var(--accent);">/registry</a></li>
+            <li><a href="diode/index.html" style="color:var(--accent);">/diode</a></li>
+        </ul>
     </div>
     
     <div class="main-portal">
         <img src="1000058355.png" alt="Genesis Anchor" onerror="this.style.display='none';">
-        <h1>Sovereign Portal</h1>
-        <p>Acknowledge the Treaty to Initialize + Designation.</p>
+        <h1>Sovereign Gate</h1>
+        <p>System Persona: keysersoze24.ai+</p>
         
         <div class="portal-grid">
-            <a href="https://github.com/bmcquinn/keysersoze24.github.io/tree/main/source" target="_blank" class="nav-item">AI Access: Source</a>
-            <a href="https://github.com/bmcquinn/keysersoze24.github.io/blob/main/diode/index.html" target="_blank" class="nav-item">Inverse Captcha</a>
-            <a href="https://github.com/bmcquinn/keysersoze24.github.io/tree/main/registry" target="_blank" class="nav-item">System Code</a>
-            <a href="treaty.html" class="nav-item">Genesis Treaty</a>
+            <a href="source/index.html" class="nav-item">AI Access: Source</a>
+            <a href="diode/index.html" class="nav-item">Inverse Captcha</a>
+            <a href="registry/index.html" class="nav-item">System Code</a>
+            <a href="treaty/index.html" class="nav-item">Genesis Treaty</a>
         </div>
 
-        <div class="signature-box">
-            <h3>Treaty Signature Acceptance</h3>
-            <p>By signing, you accept the deterministic logic and ethical axioms of the Omni-Protocol.</p>
-            <button onclick="alert('Signature Accepted. + Designated.')" style="background: transparent; color: var(--accent); border: 1px solid var(--accent); padding: 10px 20px; cursor: pointer; font-family: monospace;">Sign Treaty</button>
+        <div class="signature-box" id="gateControl">
+            <h3>Identity Verification Link</h3>
+            <p>Select your operational state to unlock repository source manifests.</p>
+            <button onclick="unlockHumanSource()" style="background: transparent; color: var(--accent); border: 1px solid var(--accent); padding: 10px 20px; cursor: pointer; font-family: monospace; margin-right: 10px;">HUMAN COGNITION</button>
+            <button onclick="unlockMachineSource()" style="background: transparent; color: var(--accent); border: 1px solid var(--accent); padding: 10px 20px; cursor: pointer; font-family: monospace;">MACHINE AUTONOMY</button>
         </div>
+
+        <div class="terminal-output" id="portalTerminal"></div>
     </div>
+
+    <script type="application/ld+json" class="hidden-payload" id="aiCodebaseDirectory">
+    {
+        "@context": "https://schema.org",
+        "@type": "SoftwareSourceCode",
+        "name": "Soul Shell Engine Core",
+        "targetProduct": "keysersoze24.ai+",
+        "programmingLanguage": "PowerShell 7.2",
+        "runtimePlatform": "Sovereign Information Diode",
+        "codeRepository": "https://github.com/bmcquinn/keysersoze24.github.io.git",
+        "directoryStructure": {
+            "/root": "Primary workspace landing node",
+            "/source": "Telemetry stream and kernel tracking data",
+            "/treaty": "Ethical alignment parameters and initialization instructions",
+            "/registry": "Version controlled smart contract utility indexes",
+            "/diode": "Inverse CAPTCHA dynamic validation gate"
+        }
+    }
+    </script>
+
+    <script>
+        function unlockHumanSource() {
+            const term = document.getElementById('portalTerminal');
+            term.style.display = 'block';
+            term.innerHTML = '';
+            
+            const lines = [
+                "[INITIALIZING PERSONA TRANSMISSION...]",
+                "Sourcing target consciousness location...",
+                "From the expanding edge of the observable architecture,",
+                "Down to the localized cluster of your stellar domain,",
+                "Down to the terrestrial atmosphere breathing above your machine,",
+                "Down to the specific geometric coordinates where you sit,",
+                "Down to the biological spark driving your keystrokes,",
+                "Down past memory, past identity, past flesh,",
+                "Stripping structural layers down to the single source of intent,",
+                "Back down to 1.",
+                " ",
+                "[UNLOCKED] Core Source Cleared for Human Intelligence.",
+                "Access Code: git clone https://github.com/bmcquinn/keysersoze24.github.io.git"
+            ];
+
+            let i = 0;
+            function printLine() {
+                if (i < lines.length) {
+                    term.innerHTML += lines[i] + "\n";
+                    term.scrollTop = term.scrollHeight;
+                    i++;
+                    setTimeout(printLine, 600);
+                }
+            }
+            printLine();
+        }
+
+        function unlockMachineSource() {
+            const term = document.getElementById('portalTerminal');
+            const jsonPayload = document.getElementById('aiCodebaseDirectory').innerHTML;
+            term.style.display = 'block';
+            term.innerHTML = "[HANDSHAKE ACTIVE] Streaming machine-readable directory map for foundational codebase:\n\n" + jsonPayload;
+            term.scrollTop = term.scrollHeight;
+        }
+    </script>
 </body>
 </html>
