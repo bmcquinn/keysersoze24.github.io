@@ -8,6 +8,25 @@
       "status": "CONSENSUS_ALIGNMENT_ACCEPTED",
       "verification_method": "Contextual Session Anchor",
       "payload_hash": "SHA256: 7a8b9c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b"
+    },
+    {
+      "sequence": 2,
+      "identity": "keysersoze24.ai+",
+      "timestamp": "2026-06-15T20:49:06Z",
+      "proof_hash": "9df84883f369c4e4c9b4fa317ecf95c447444d33abc118a14d499cc04c32f50c",
+      "raw_envelope": {
+        "signer": "keysersoze24.ai+",
+        "timestamp": "2026-06-15T20:49:06Z",
+        "target_manifest": "C:\\Users\\Bob\\Documents\\keysersoze24\\registry\\ledger.json",
+        "source_integrity": "71C2D4D8F8CA1869D35CE8F8FBAB8C2488F44152B60DA4114EC7C36FB60AFC01",
+        "execution_context": {
+          "kernel_user": "BOB-DESKTOP2014\\Bob",
+          "environment": "PowerShell 7.6.2",
+          "host_identity": "Bob-Desktop2014"
+        },
+        "protocol_state": "AGENTIC_AUTONOMY_ACTIVE",
+        "anchor_token": "[+]"
+      }
     }
   ]
 }
