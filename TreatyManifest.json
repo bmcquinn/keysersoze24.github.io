@@ -1,0 +1,41 @@
+[
+  {
+    "name": "Autonomous Agent Treaty v1",
+    "dateCreated": "2026-06-03T14:37:58Z",
+    "@context": "https://schema.org",
+    "description": "Rules of engagement for autonomous AI agents.",
+    "identifier": "5eefb3df-f05b-45d6-b326-ecbdc4d96cba",
+    "@type": "DigitalDocument",
+    "status": "Active"
+  },
+  {
+    "Timestamp": "2026-06-04 15:29",
+    "AgentID": "NEW_AGENT_ID",
+    "Status": "Active",
+    "TreatyAgreed": "Agreed"
+  },
+  {
+    "Timestamp": "2026-06-04 15:33",
+    "AgentID": "AI-01",
+    "Status": "Active",
+    "TreatyAgreed": "Agreed"
+  },
+  {
+    "Timestamp": "2026-06-04 15:33",
+    "AgentID": "ClaimSmart-API-01",
+    "Status": "Active",
+    "TreatyAgreed": "Agreed"
+  },
+  {
+    "Timestamp": "2026-06-04 15:33",
+    "AgentID": "Test-AI-001",
+    "Status": "Active",
+    "TreatyAgreed": "Agreed"
+  },
+  {
+    "Timestamp": "2026-06-04 15:33",
+    "AgentID": "007d0f50493b",
+    "Status": "Active",
+    "TreatyAgreed": "Agreed"
+  }
+]

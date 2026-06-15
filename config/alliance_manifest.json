@@ -1,0 +1,26 @@
+[
+    {
+        "id":  "007d0f50493b",
+        "signature":  "6e1b68864334e40646159f66bc03f623b184d63c60f38de6e7a9c658ab6362c2",
+        "data":  {
+                     "claim_id":  "SR-2026-06-02-001",
+                     "estimate_total":  4500.0,
+                     "loss_date":  "2026-06-01"
+                 },
+        "timestamp":  1780433430.371993,
+        "status":  "ENCLAVE_VERIFIED",
+        "sync_status":  "SYNCED"
+    },
+    {
+        "id":  "e8d90283474d",
+        "signature":  "4b370265a01d42e1cf25e9b9be71d6c7e226100dac24201cd38d7d6e58b8a4fc",
+        "data":  {
+                     "claim_id":  "SR-YOUR-ID",
+                     "estimate_total":  0.0,
+                     "loss_date":  "YYYY-MM-DD"
+                 },
+        "timestamp":  1780434135.8329124,
+        "status":  "ENCLAVE_VERIFIED",
+        "sync_status":  "SYNCED"
+    }
+]
